@@ -1,13 +1,21 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, screen } from 'electron';
 import path from 'node:path';
 
 const WINDOW_SIZE = 160;
+const RIGHT_MARGIN = 16;
+const BOTTOM_MARGIN = 0;
 
 export function createPetWindow(): BrowserWindow {
+  // Read the usable bounds first, then offset the window from the bottom-right.
+  const { workArea } = screen.getPrimaryDisplay();
+  const x = workArea.x + workArea.width - WINDOW_SIZE - RIGHT_MARGIN;
+  const y = workArea.y + workArea.height - WINDOW_SIZE - BOTTOM_MARGIN;
+
   const petWindow = new BrowserWindow({
     width: WINDOW_SIZE,
     height: WINDOW_SIZE,
-    center: true,
+    x,
+    y,
     transparent: true,
     frame: false,
     alwaysOnTop: true,
