@@ -1,18 +1,19 @@
 import { BrowserWindow, screen } from 'electron';
 import path from 'node:path';
 
+import { registerIpcHandlers } from './ipcHandlers';
+
 const WINDOW_SIZE = 160;
-const RIGHT_MARGIN = 16;
 const BOTTOM_MARGIN = 0;
 
 export function createPetWindow(): BrowserWindow {
-  // Read the usable bounds first, then offset the window from the bottom-right.
+  // Keep one transparent stage fixed directly above the taskbar.
   const { workArea } = screen.getPrimaryDisplay();
-  const x = workArea.x + workArea.width - WINDOW_SIZE - RIGHT_MARGIN;
+  const x = workArea.x;
   const y = workArea.y + workArea.height - WINDOW_SIZE - BOTTOM_MARGIN;
 
   const petWindow = new BrowserWindow({
-    width: WINDOW_SIZE,
+    width: workArea.width,
     height: WINDOW_SIZE,
     x,
     y,
@@ -28,6 +29,8 @@ export function createPetWindow(): BrowserWindow {
       nodeIntegration: false,
     },
   });
+
+  registerIpcHandlers(petWindow);
 
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     void petWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);

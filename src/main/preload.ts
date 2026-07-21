@@ -1,4 +1,12 @@
-import { contextBridge } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 
-// Reserve a safe, isolated namespace without exposing IPC or Node.js APIs yet.
-contextBridge.exposeInMainWorld('desktopPet', Object.freeze({}));
+import { IPC_CHANNELS } from '../shared/ipcChannels';
+import type { DesktopPetApi } from '../shared/types';
+
+const desktopPetApi: DesktopPetApi = Object.freeze({
+  setIgnoreMouseEvents: (shouldIgnore: boolean): void => {
+    ipcRenderer.send(IPC_CHANNELS.setIgnoreMouseEvents, shouldIgnore);
+  },
+});
+
+contextBridge.exposeInMainWorld('desktopPet', desktopPetApi);
