@@ -27,6 +27,10 @@ body {
   left: 0;
   width: var(--pet-size);
   height: var(--pet-size);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
   will-change: transform;
 }
 
@@ -61,4 +65,127 @@ body {
   to {
     background-position-x: calc(var(--pet-size) * -4);
   }
+}
+
+.todo-panel {
+  position: absolute;
+  bottom: 20px;
+  width: 230px;
+  padding: 7px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 5px;
+  border: 2px solid #20272d;
+  border-radius: 3px;
+  background: #147fbd;
+  box-shadow: 6px -6px 0 #ffd65a, 8px -8px 0 #20272d;
+  color: #ffffff;
+  font: 12px/1.2 system-ui, sans-serif;
+}
+
+.todo-panel::before,
+.todo-panel::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.todo-panel::before {
+  width: 14px;
+  height: 22px;
+  background: #20272d;
+}
+
+.todo-panel::after {
+  width: 10px;
+  height: 16px;
+  background: #147fbd;
+}
+
+.todo-panel[data-tail-side='left']::before {
+  left: -14px;
+  clip-path: polygon(100% 0, 100% 100%, 0 50%);
+}
+
+.todo-panel[data-tail-side='left']::after {
+  left: -10px;
+  clip-path: polygon(100% 0, 100% 100%, 0 50%);
+}
+
+.todo-panel[data-tail-side='right']::before {
+  right: -14px;
+  clip-path: polygon(0 0, 0 100%, 100% 50%);
+}
+
+.todo-panel[data-tail-side='right']::after {
+  right: -10px;
+  clip-path: polygon(0 0, 0 100%, 100% 50%);
+}
+
+.todo-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.todo-panel h2 {
+  margin: 0;
+  margin-right: auto;
+  font-size: 15px;
+}
+
+.todo-panel input,
+.todo-panel button {
+  min-height: 23px;
+  padding: 2px 5px;
+  box-sizing: border-box;
+  border: 1px solid #20272d;
+  border-radius: 2px;
+  font: inherit;
+}
+
+.todo-panel input {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.todo-panel-header > button {
+  height: 22px;
+  min-height: 22px;
+  padding: 1px 5px;
+  justify-self: end;
+  align-self: center;
+  font-size: 11px;
+}
+
+.todo-panel button {
+  background: #ffd65a;
+  color: #20272d;
+  cursor: pointer;
+}
+
+.todo-panel input[type='text'] {
+  grid-column: 1;
+}
+
+.todo-panel .todo-close-button {
+  width: 22px;
+  padding: 0;
+  border-color: transparent;
+  background: #147fbd;
+  color: #ffffff;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.todo-datetime-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+  min-width: 0;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { PetDirection } from '../../shared/types';
 
@@ -23,12 +23,14 @@ function getRandomDirection(): PetDirection {
   return Math.random() < 0.5 ? 'left' : 'right';
 }
 
-export function usePetMovement(): PetMovement {
+export function usePetMovement(isPaused = false): PetMovement {
+  const isPausedRef = useRef(isPaused);
   const [position, setPosition] = useState(() =>
     Math.max(0, window.innerWidth - PET_WIDTH),
   );
   const [direction, setDirection] = useState<PetDirection>('left');
   const [state, setState] = useState<PetMovementState>('idle');
+  isPausedRef.current = isPaused;
 
   useEffect(() => {
     let animationFrameId = 0;
@@ -36,6 +38,7 @@ export function usePetMovement(): PetMovement {
     let currentPosition = Math.max(0, window.innerWidth - PET_WIDTH);
     let currentDirection: PetDirection = 'left';
     let currentState: PetMovementState = 'idle';
+    let pauseStartedAt: number | undefined;
     let stateEndsAt =
       performance.now() +
       getRandomDuration(
@@ -70,6 +73,23 @@ export function usePetMovement(): PetMovement {
     const movePet = (currentTime: number): void => {
       const maximumX = Math.max(0, window.innerWidth - PET_WIDTH);
       currentPosition = Math.min(currentPosition, maximumX);
+
+      if (isPausedRef.current) {
+        if (pauseStartedAt === undefined) {
+          pauseStartedAt = currentTime;
+          setState('idle');
+        }
+
+        previousTime = currentTime;
+        animationFrameId = requestAnimationFrame(movePet);
+        return;
+      }
+
+      if (pauseStartedAt !== undefined) {
+        stateEndsAt += currentTime - pauseStartedAt;
+        pauseStartedAt = undefined;
+        setState(currentState);
+      }
 
       if (previousTime === undefined) previousTime = currentTime;
       const elapsedSeconds = (currentTime - previousTime) / 1000;
