@@ -98,14 +98,25 @@ body {
 }
 
 .todo-panel {
+  --todo-panel-width: 230px;
+  --todo-panel-height: 157px;
+  --todo-panel-padding: 7px;
+  --todo-panel-gap: 5px;
+  --todo-header-height: 28px;
+  --todo-control-height: 23px;
+  --todo-body-padding: 0 4px 4px;
+
   position: absolute;
   bottom: 20px;
-  width: 230px;
-  padding: 7px;
+  width: var(--todo-panel-width);
+  height: var(--todo-panel-height);
+  max-height: calc(100% - 28px);
+  padding: var(--todo-panel-padding);
   box-sizing: border-box;
   display: grid;
+  grid-template-rows: var(--todo-header-height) minmax(0, 1fr);
   grid-template-columns: minmax(0, 1fr);
-  gap: 5px;
+  gap: var(--todo-panel-gap);
   border: 2px solid #20272d;
   border-radius: 3px;
   background: #147fbd;
@@ -156,21 +167,40 @@ body {
 }
 
 .todo-panel-header {
-  display: flex;
+  height: var(--todo-header-height);
+  min-height: var(--todo-header-height);
+  display: grid;
+  grid-template-columns: 51px minmax(0, 1fr) 51px;
   align-items: center;
-  gap: 5px;
   min-width: 0;
 }
 
-.todo-panel h2 {
+.todo-panel-header-left,
+.todo-panel-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--todo-panel-gap);
+}
+
+.todo-panel-header-left {
+  justify-content: flex-start;
+}
+
+.todo-panel-header-right {
+  justify-content: flex-end;
+}
+
+.todo-panel-title {
   margin: 0;
-  margin-right: auto;
   font-size: 15px;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .todo-panel input,
 .todo-panel button {
-  min-height: 23px;
+  height: var(--todo-control-height);
+  min-height: var(--todo-control-height);
   padding: 2px 5px;
   box-sizing: border-box;
   border: 1px solid #20272d;
@@ -184,19 +214,45 @@ body {
   max-width: 100%;
 }
 
-.todo-panel-header > button {
-  height: 22px;
-  min-height: 22px;
+.todo-panel-header button {
+  height: var(--todo-control-height);
+  min-height: var(--todo-control-height);
   padding: 1px 5px;
   justify-self: end;
   align-self: center;
   font-size: 11px;
 }
 
+.todo-panel-navigation-button {
+  width: var(--todo-control-height);
+  padding: 0;
+  display: grid;
+  place-items: center;
+}
+
+.todo-panel-navigation-button:hover {
+  filter: brightness(1.08);
+}
+
 .todo-panel button {
   background: #ffd65a;
   color: #20272d;
   cursor: pointer;
+}
+
+.todo-panel-body {
+  min-width: 0;
+  min-height: 0;
+  padding: var(--todo-body-padding);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--todo-panel-gap);
+}
+
+.todo-save-button {
+  width: 100%;
+  margin-top: auto;
 }
 
 .todo-panel input[type='text'] {
@@ -221,11 +277,19 @@ body {
 }
 
 .todo-list {
-  max-height: 55px;
+  flex: 1;
+  min-height: 0;
   margin: 0;
   padding: 0;
   overflow-y: auto;
   list-style: none;
+}
+
+.todo-empty {
+  margin: 0;
+  padding: 10px 4px;
+  color: #fff3b8;
+  text-align: center;
 }
 
 .todo-list-item {
@@ -241,4 +305,101 @@ body {
   gap: 5px;
   color: #fff3b8;
   font-size: 11px;
+}
+
+.todo-panel-body[data-mode='calendar'] {
+  gap: 2px;
+}
+
+.calendar-view {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 18px 11px minmax(0, 1fr);
+  gap: 2px;
+}
+
+.calendar-toolbar {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) 20px;
+  align-items: center;
+  gap: 2px;
+}
+
+.todo-panel .calendar-toolbar button {
+  width: 20px;
+  height: 18px;
+  min-height: 18px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+}
+
+.calendar-toolbar strong {
+  overflow: hidden;
+  font-size: 10px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+}
+
+.calendar-weekdays {
+  align-items: center;
+  color: #fff3b8;
+  font-size: 8px;
+  text-align: center;
+}
+
+.calendar-grid {
+  min-height: 0;
+  grid-template-rows: repeat(6, minmax(0, 1fr));
+}
+
+.todo-panel .calendar-day {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 8px;
+  line-height: 1;
+}
+
+.todo-panel .calendar-day:hover {
+  background: rgb(255 255 255 / 16%);
+}
+
+.todo-panel .calendar-day.is-today {
+  border-color: #ffd65a;
+}
+
+.todo-panel .calendar-day.is-selected {
+  border-color: #20272d;
+  background: #ffd65a;
+  color: #20272d;
+}
+
+.calendar-todo-dot {
+  position: absolute;
+  bottom: 1px;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #ffd65a;
+}
+
+.calendar-day.is-selected .calendar-todo-dot {
+  background: #20272d;
 }
