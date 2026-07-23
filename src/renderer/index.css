@@ -45,6 +45,13 @@ body {
   image-rendering: pixelated;
 }
 
+.pet-placeholder[data-movement-state='idle'] .pet-sprite {
+  background-image: url('../../assets/sprites/idle/idle-motion.png');
+  background-size: 400% 100%;
+  background-position: 0 0;
+  animation: pet-idle 800ms step-end infinite;
+}
+
 .pet-placeholder[data-movement-state='walk'] .pet-sprite {
   background-image: url('../../assets/sprites/idle/walk.png');
   /* Source sheet: 2508x627px, four 627px-wide frames. */
@@ -55,6 +62,29 @@ body {
 
 .pet-placeholder[data-direction='right'] .pet-sprite {
   transform: scaleX(-1);
+}
+
+@keyframes pet-idle {
+  /* 각 프레임의 몸통 위치 차이를 보정해 좌우 흔들림을 줄입니다. */
+  0% {
+    background-position-x: 0;
+  }
+
+  25% {
+    background-position-x: calc(var(--pet-size) * -0.976);
+  }
+
+  50% {
+    background-position-x: calc(var(--pet-size) * -1.952);
+  }
+
+  75% {
+    background-position-x: calc(var(--pet-size) * -2.944);
+  }
+
+  100% {
+    background-position-x: 0;
+  }
 }
 
 @keyframes pet-walk {
@@ -188,4 +218,27 @@ body {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 5px;
   min-width: 0;
+}
+
+.todo-list {
+  max-height: 55px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.todo-list-item {
+  display: grid;
+  gap: 2px;
+  padding: 4px;
+  border-top: 1px solid rgb(255 255 255 / 45%);
+  overflow-wrap: anywhere;
+}
+
+.todo-reminder {
+  display: flex;
+  gap: 5px;
+  color: #fff3b8;
+  font-size: 11px;
 }

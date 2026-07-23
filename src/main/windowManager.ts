@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { registerIpcHandlers } from './ipcHandlers';
 
-const WINDOW_SIZE = 160;
+const WINDOW_SIZE = 240;
 const BOTTOM_MARGIN = 0;
 
 export function createPetWindow(): BrowserWindow {
