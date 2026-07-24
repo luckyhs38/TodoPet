@@ -63,6 +63,13 @@ export function App() {
     );
   };
 
+  const deleteTodo = (todoId: string): void => {
+    // 선택한 id가 아닌 일정만 남겨 기존 배열을 직접 수정하지 않습니다.
+    setTodos((currentTodos) =>
+      currentTodos.filter((todo) => todo.id !== todoId),
+    );
+  };
+
   const cycleTodoStatus = (todoId: string): void => {
     // map으로 선택한 일정만 새 객체로 바꿔 기존 배열을 직접 수정하지 않습니다.
     setTodos((currentTodos) =>
@@ -117,6 +124,7 @@ export function App() {
           todos={todos}
           onAddTodo={addTodo}
           onUpdateTodo={updateTodo}
+          onDeleteTodo={deleteTodo}
           onCycleTodoStatus={cycleTodoStatus}
           onCycleTodoPriority={cycleTodoPriority}
           onClose={() => setIsTodoPanelOpen(false)}

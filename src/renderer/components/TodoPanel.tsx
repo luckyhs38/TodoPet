@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FocusEvent, KeyboardEvent } from 'react';
 
 import type {
@@ -11,6 +11,13 @@ import { CalendarView } from './CalendarView';
 type TodoPanelMode = 'list' | 'create' | 'calendar';
 type EditingField = 'content' | 'time' | null;
 
+interface TodoContextMenu {
+  todoId: string;
+  x: number;
+  y: number;
+  isConfirming: boolean;
+}
+
 interface TodoPanelProps {
   petPosition: number;
   todos: Todo[];
@@ -22,6 +29,7 @@ interface TodoPanelProps {
     priority: TodoPriority,
   ): boolean;
   onUpdateTodo(todoId: string, content: string, remindTime: string): void;
+  onDeleteTodo(todoId: string): void;
   onCycleTodoStatus(todoId: string): void;
   onCycleTodoPriority(todoId: string): void;
   onClose(): void;
@@ -61,6 +69,7 @@ export function TodoPanel({
   todos,
   onAddTodo,
   onUpdateTodo,
+  onDeleteTodo,
   onCycleTodoStatus,
   onCycleTodoPriority,
   onClose,
@@ -85,6 +94,31 @@ export function TodoPanel({
   const shouldCancelBlurRef = useRef(false);
   // 패널을 열 때는 항상 목록 화면부터 보여줍니다.
   const [mode, setMode] = useState<TodoPanelMode>('list');
+  const [contextMenu, setContextMenu] = useState<TodoContextMenu | null>(null);
+
+  useEffect(() => {
+    if (!contextMenu) return;
+
+    const handleDocumentMouseDown = (event: MouseEvent): void => {
+      if (event.button === 0) setContextMenu(null);
+    };
+    const handleDocumentKeyDown = (event: globalThis.KeyboardEvent): void => {
+      if (event.key !== 'Escape') return;
+
+      // 메뉴가 열려 있을 때는 기존 contentEditable Escape까지 전달하지 않습니다.
+      event.preventDefault();
+      event.stopPropagation();
+      setContextMenu(null);
+    };
+
+    document.addEventListener('mousedown', handleDocumentMouseDown);
+    document.addEventListener('keydown', handleDocumentKeyDown, true);
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentMouseDown);
+      document.removeEventListener('keydown', handleDocumentKeyDown, true);
+    };
+  }, [contextMenu]);
+
   const hasRoomOnRight =
     petPosition + PET_WIDTH + PANEL_GAP + PANEL_WIDTH <= window.innerWidth;
 
@@ -244,6 +278,35 @@ export function TodoPanel({
     event.currentTarget.blur();
   };
 
+  const handleContextMenuDelete = (): void => {
+    // 중앙 확인창 대신 같은 우클릭 메뉴 안에서 한 번 더 확인합니다.
+    setContextMenu((currentMenu) =>
+      currentMenu ? { ...currentMenu, isConfirming: true } : null,
+    );
+  };
+
+  const confirmContextMenuDelete = (): void => {
+    if (!contextMenu) return;
+
+    const todoId = contextMenu.todoId;
+    if (editingTodoId === todoId) {
+      // 삭제될 contentEditable의 포커스를 먼저 정리해 다음 편집을 막지 않게 합니다.
+      shouldCancelBlurRef.current = true;
+      const activeElement = document.activeElement;
+      if (
+        activeElement instanceof HTMLElement &&
+        activeElement.isContentEditable
+      ) {
+        activeElement.blur();
+      }
+      shouldCancelBlurRef.current = false;
+      resetEditingTodo();
+    }
+
+    onDeleteTodo(todoId);
+    setContextMenu(null);
+  };
+
   return (
     <aside
       id="todo-panel"
@@ -335,7 +398,19 @@ export function TodoPanel({
           ) : (
             <ul className="todo-list">
               {selectedDateTodos.map((todo) => (
-                <li key={todo.id} className="todo-list-item">
+                <li
+                  key={todo.id}
+                  className="todo-list-item"
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                    setContextMenu({
+                      todoId: todo.id,
+                      x: event.clientX,
+                      y: event.clientY,
+                      isConfirming: false,
+                    });
+                  }}
+                >
                   <button
                     type="button"
                     className="todo-priority-button"
@@ -481,6 +556,54 @@ export function TodoPanel({
           />
         )}
       </div>
+
+      {contextMenu && (
+        <div
+          className="todo-context-menu"
+          role="menu"
+          data-confirming={contextMenu.isConfirming ? 'true' : 'false'}
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onMouseDown={(event) => {
+            // 메뉴 클릭이 contentEditable의 blur 저장을 일으키지 않게 합니다.
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+        >
+          {contextMenu.isConfirming ? (
+            <>
+              <p className="todo-context-menu-message">삭제할까요?</p>
+              <button
+                type="button"
+                className="todo-panel-navigation-button todo-context-menu-delete-button"
+                role="menuitem"
+                aria-label="일정 삭제 확인"
+                onClick={confirmContextMenuDelete}
+              >
+                삭제
+              </button>
+              <button
+                type="button"
+                className="todo-panel-navigation-button todo-context-menu-cancel-button"
+                role="menuitem"
+                aria-label="일정 삭제 취소"
+                onClick={() => setContextMenu(null)}
+              >
+                취소
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              className="todo-panel-navigation-button todo-context-menu-delete-button"
+              role="menuitem"
+              aria-label="일정 삭제"
+              onClick={handleContextMenuDelete}
+            >
+              삭제
+            </button>
+          )}
+        </div>
+      )}
 
     </aside>
   );
