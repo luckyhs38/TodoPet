@@ -1,10 +1,15 @@
 import { useState } from 'react';
 
-import type { Todo } from '../shared/types';
+import type { Todo, TodoPriority, TodoStatus } from '../shared/types';
 import { TodoPanel } from './components/TodoPanel';
 import { useClickThrough } from './hooks/useClickThrough';
 import { usePetMovement } from './hooks/usePetMovement';
 
+const NEXT_TODO_STATUS: Record<TodoStatus, TodoStatus> = {
+  todo: 'inProgress',
+  inProgress: 'done',
+  done: 'todo',
+};
 export function App() {
   useClickThrough();
   const [isTodoPanelOpen, setIsTodoPanelOpen] = useState(false);
@@ -16,6 +21,8 @@ export function App() {
     content: string,
     remindDate: string,
     remindTime: string,
+    status: TodoStatus,
+    priority: TodoPriority,
   ): boolean => {
     const trimmedContent = content.trim();
     if (!trimmedContent) return false;
@@ -25,13 +32,66 @@ export function App() {
       content: trimmedContent,
       remindDate,
       remindTime,
-      isDone: false,
+      status,
+      priority,
+      // 기존 완료 필드는 진행상태와 같은 값을 나타내도록 맞춥니다.
+      isDone: status === 'done',
       createdAt: new Date().toISOString(),
     };
 
     // 기존 배열을 바꾸지 않고 새 배열을 만들어 React에 변경을 알립니다.
     setTodos((currentTodos) => [...currentTodos, newTodo]);
     return true;
+  };
+
+  const updateTodo = (
+    todoId: string,
+    content: string,
+    remindTime: string,
+  ): void => {
+    // 선택한 일정의 내용과 시간만 새 객체에 덮어씁니다.
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.id === todoId
+          ? {
+              ...todo,
+              content,
+              remindTime,
+            }
+          : todo,
+      ),
+    );
+  };
+
+  const cycleTodoStatus = (todoId: string): void => {
+    // map으로 선택한 일정만 새 객체로 바꿔 기존 배열을 직접 수정하지 않습니다.
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) => {
+        if (todo.id !== todoId) return todo;
+
+        const nextStatus = NEXT_TODO_STATUS[todo.status];
+        return {
+          ...todo,
+          status: nextStatus,
+          isDone: nextStatus === 'done',
+        };
+      }),
+    );
+  };
+
+  const cycleTodoPriority = (todoId: string): void => {
+    // 중요도만 새 값으로 바꾸고 진행상태를 포함한 나머지 값은 유지합니다.
+    setTodos((currentTodos) =>
+      currentTodos.map((todo) =>
+        todo.id === todoId
+          ? {
+              ...todo,
+              // high가 아니면 기본 중요도로 보고 ★로 전환합니다.
+              priority: todo.priority === 'high' ? 'low' : 'high',
+            }
+          : todo,
+      ),
+    );
   };
 
   return (
@@ -56,6 +116,9 @@ export function App() {
           petPosition={position}
           todos={todos}
           onAddTodo={addTodo}
+          onUpdateTodo={updateTodo}
+          onCycleTodoStatus={cycleTodoStatus}
+          onCycleTodoPriority={cycleTodoPriority}
           onClose={() => setIsTodoPanelOpen(false)}
         />
       )}

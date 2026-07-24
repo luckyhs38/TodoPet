@@ -198,6 +198,7 @@ body {
 }
 
 .todo-panel input,
+.todo-panel select,
 .todo-panel button {
   height: var(--todo-control-height);
   min-height: var(--todo-control-height);
@@ -208,7 +209,8 @@ body {
   font: inherit;
 }
 
-.todo-panel input {
+.todo-panel input,
+.todo-panel select {
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -240,6 +242,36 @@ body {
   cursor: pointer;
 }
 
+.todo-date-navigation {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 2px;
+}
+
+.todo-panel .todo-date-navigation-button {
+  width: 100%;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+}
+
+.todo-panel .todo-date-navigation-button:hover,
+.todo-panel .todo-date-navigation-button:focus-visible {
+  background: rgb(255 255 255 / 16%);
+  outline: 1px solid #ffd65a;
+  outline-offset: -1px;
+}
+
+.todo-selected-date-button {
+  white-space: nowrap;
+}
+
 .todo-panel-body {
   min-width: 0;
   min-height: 0;
@@ -247,6 +279,18 @@ body {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  gap: var(--todo-panel-gap);
+}
+
+.todo-panel-body[data-mode='create'] {
+  overflow-y: auto;
+}
+
+.todo-select-field {
+  min-height: var(--todo-control-height);
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
   gap: var(--todo-panel-gap);
 }
 
@@ -294,17 +338,107 @@ body {
 
 .todo-list-item {
   display: grid;
-  gap: 2px;
+  grid-template-columns: 12px 16px 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
   padding: 4px;
   border-top: 1px solid rgb(255 255 255 / 45%);
-  overflow-wrap: anywhere;
 }
 
-.todo-reminder {
-  display: flex;
-  gap: 5px;
+.todo-panel .todo-priority-button {
+  width: 12px;
+  height: 14px;
+  min-height: 14px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
   color: #fff3b8;
-  font-size: 11px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.todo-panel .todo-priority-button:hover,
+.todo-panel .todo-priority-button:focus-visible {
+  background: rgb(255 214 90 / 18%);
+  outline: 1px solid #ffd65a;
+  outline-offset: 1px;
+}
+
+.todo-priority-button[data-priority='low'] {
+  opacity: 0.65;
+}
+
+.todo-priority-button[data-priority='high'] {
+  color: #ffd65a;
+  filter: brightness(1.15);
+  text-shadow: 0 0 2px #ffd65a;
+}
+
+.todo-panel .todo-status-button {
+  width: 14px;
+  height: 14px;
+  min-height: 14px;
+  padding: 0;
+  border-color: transparent;
+  border-radius: 1px;
+  background: transparent;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.todo-panel .todo-status-button:hover,
+.todo-panel .todo-status-button:focus-visible {
+  background: rgb(255 255 255 / 16%);
+  outline: 1px solid #ffd65a;
+  outline-offset: 1px;
+}
+
+.todo-list-time {
+  overflow: hidden;
+  color: #fff3b8;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.todo-list-content {
+  min-width: 0;
+  /* 수정: 긴 문장을 다음 줄로 자동 줄바꿈 */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* 추가: 완료된 일정 내용에 취소선과 흐림 표시 */
+.todo-list-content--done {
+  text-decoration: line-through;
+  opacity: 0.65;
+}
+
+.todo-list-time[contenteditable='true'],
+.todo-list-content[contenteditable='true'] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 14px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  caret-color: currentColor;
+  cursor: text;
+  user-select: text;
+}
+
+.todo-list-time[contenteditable='true']:focus,
+.todo-list-content[contenteditable='true']:focus {
+  outline: none;
+  background: transparent;
 }
 
 .todo-panel-body[data-mode='calendar'] {
