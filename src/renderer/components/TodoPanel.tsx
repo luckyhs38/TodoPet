@@ -126,9 +126,15 @@ export function TodoPanel({
     ? petPosition + PET_WIDTH + PANEL_GAP
     : Math.max(PANEL_GAP, petPosition - PANEL_WIDTH - PANEL_GAP);
 
-  const selectedDateTodos = todos.filter(
-    (todo) => todo.remindDate === selectedDate,
-  );
+  const selectedDateTodos = todos
+    .filter((todo) => todo.remindDate === selectedDate)
+    .sort((firstTodo, secondTodo) => {
+      if (!firstTodo.remindTime && !secondTodo.remindTime) return 0;
+      if (!firstTodo.remindTime) return 1;
+      if (!secondTodo.remindTime) return -1;
+
+      return firstTodo.remindTime.localeCompare(secondTodo.remindTime);
+    });
 
   const panelTitle = mode === 'create' ? '일정 추가' : '달력';
 
