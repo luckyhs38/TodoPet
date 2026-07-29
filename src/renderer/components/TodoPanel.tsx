@@ -27,11 +27,15 @@ interface TodoPanelProps {
     remindTime: string,
     status: TodoStatus,
     priority: TodoPriority,
-  ): boolean;
-  onUpdateTodo(todoId: string, content: string, remindTime: string): void;
-  onDeleteTodo(todoId: string): void;
-  onCycleTodoStatus(todoId: string): void;
-  onCycleTodoPriority(todoId: string): void;
+  ): Promise<boolean>;
+  onUpdateTodo(
+    todoId: string,
+    content: string,
+    remindTime: string,
+  ): Promise<boolean>;
+  onDeleteTodo(todoId: string): Promise<void>;
+  onCycleTodoStatus(todoId: string): Promise<void>;
+  onCycleTodoPriority(todoId: string): Promise<void>;
   onClose(): void;
 }
 
@@ -167,8 +171,8 @@ export function TodoPanel({
     setMode('list');
   };
 
-  const handleAddTodo = (): void => {
-    const wasAdded = onAddTodo(
+  const handleAddTodo = async (): Promise<void> => {
+    const wasAdded = await onAddTodo(
       content,
       remindDate,
       remindTime,
@@ -214,36 +218,47 @@ export function TodoPanel({
     element.blur();
   };
 
-  const saveEditingTodo = (
+  const saveEditingTodo = async (
     event: FocusEvent<HTMLElement>,
     todo: Todo,
     field: Exclude<EditingField, null>,
-  ): void => {
+  ): Promise<void> => {
     if (shouldCancelBlurRef.current) {
       shouldCancelBlurRef.current = false;
       return;
     }
 
-    const editedValue = event.currentTarget.textContent?.trim() ?? '';
+    const element = event.currentTarget;
+    const editedValue = element.textContent?.trim() ?? '';
 
     if (field === 'content') {
       if (!editedValue) {
         // 빈 내용은 저장하지 않고 기존 내용을 다시 보여줍니다.
-        restoreOriginalValue(event.currentTarget);
+        restoreOriginalValue(element);
       } else {
         // 붙여넣은 HTML이 아니라 화면에 보이는 글자만 저장합니다.
-        event.currentTarget.textContent = editedValue;
+        element.textContent = editedValue;
         if (editedValue !== todo.content) {
-          onUpdateTodo(todo.id, editedValue, todo.remindTime);
+          const wasUpdated = await onUpdateTodo(
+            todo.id,
+            editedValue,
+            todo.remindTime,
+          );
+          if (!wasUpdated) restoreOriginalValue(element);
         }
       }
     } else if (TODO_TIME_PATTERN.test(editedValue)) {
-      event.currentTarget.textContent = editedValue;
+      element.textContent = editedValue;
       if (editedValue !== todo.remindTime) {
-        onUpdateTodo(todo.id, todo.content, editedValue);
+        const wasUpdated = await onUpdateTodo(
+          todo.id,
+          todo.content,
+          editedValue,
+        );
+        if (!wasUpdated) restoreOriginalValue(element);
       }
     } else {
-      restoreOriginalValue(event.currentTarget);
+      restoreOriginalValue(element);
     }
 
     resetEditingTodo();

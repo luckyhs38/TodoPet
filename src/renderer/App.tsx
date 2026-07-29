@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import type { Todo, TodoPriority, TodoStatus } from '../shared/types';
 import { TodoPanel } from './components/TodoPanel';
@@ -17,13 +17,32 @@ export function App() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const { position, direction, state } = usePetMovement(isTodoPanelOpen);
 
-  const addTodo = (
+  useEffect(() => {
+    let isActive = true;
+
+    const loadTodos = async (): Promise<void> => {
+      try {
+        const storedTodos = await window.desktopPet.getTodos();
+        if (isActive) setTodos(storedTodos);
+      } catch (error) {
+        console.error('Todo 목록을 불러오지 못했습니다.', error);
+      }
+    };
+
+    void loadTodos();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const addTodo = async (
     content: string,
     remindDate: string,
     remindTime: string,
     status: TodoStatus,
     priority: TodoPriority,
-  ): boolean => {
+  ): Promise<boolean> => {
     const trimmedContent = content.trim();
     if (!trimmedContent) return false;
 
@@ -40,53 +59,90 @@ export function App() {
     };
 
     // 기존 배열을 바꾸지 않고 새 배열을 만들어 React에 변경을 알립니다.
-    setTodos((currentTodos) => [...currentTodos, newTodo]);
-    return true;
+    try {
+      const savedTodo = await window.desktopPet.addTodo(newTodo);
+      setTodos((currentTodos) => [...currentTodos, savedTodo]);
+      return true;
+    } catch (error) {
+      console.error('Todo를 저장하지 못했습니다.', error);
+      return false;
+    }
   };
 
-  const updateTodo = (
+  const updateTodo = async (
     todoId: string,
     content: string,
     remindTime: string,
-  ): void => {
+  ): Promise<boolean> => {
+    const currentTodo = todos.find((todo) => todo.id === todoId);
+    if (!currentTodo) return false;
+
+    const updatedTodo: Todo = {
+      ...currentTodo,
+      content,
+      remindTime,
+    };
+
     // 선택한 일정의 내용과 시간만 새 객체에 덮어씁니다.
-    setTodos((currentTodos) =>
-      currentTodos.map((todo) =>
-        todo.id === todoId
-          ? {
-              ...todo,
-              content,
-              remindTime,
-            }
-          : todo,
-      ),
-    );
+    try {
+      const savedTodo = await window.desktopPet.updateTodo(updatedTodo);
+      setTodos((currentTodos) =>
+        currentTodos.map((todo) =>
+          todo.id === todoId ? savedTodo : todo,
+        ),
+      );
+      return true;
+    } catch (error) {
+      console.error('Todo를 수정하지 못했습니다.', error);
+      return false;
+    }
   };
 
-  const deleteTodo = (todoId: string): void => {
+  const deleteTodo = async (todoId: string): Promise<void> => {
     // 선택한 id가 아닌 일정만 남겨 기존 배열을 직접 수정하지 않습니다.
-    setTodos((currentTodos) =>
-      currentTodos.filter((todo) => todo.id !== todoId),
-    );
+    try {
+      await window.desktopPet.deleteTodo(todoId);
+      setTodos((currentTodos) =>
+        currentTodos.filter((todo) => todo.id !== todoId),
+      );
+    } catch (error) {
+      console.error('Todo를 삭제하지 못했습니다.', error);
+    }
   };
 
-  const cycleTodoStatus = (todoId: string): void => {
+  const cycleTodoStatus = async (todoId: string): Promise<void> => {
+    const currentTodo = todos.find((todo) => todo.id === todoId);
+    if (!currentTodo) return;
+
+    const updatedTodo: Todo = {
+      ...currentTodo,
+      status: NEXT_TODO_STATUS[currentTodo.status],
+    };
+
     // map으로 선택한 일정만 새 객체로 바꿔 기존 배열을 직접 수정하지 않습니다.
-    setTodos((currentTodos) =>
-      currentTodos.map((todo) => {
-        if (todo.id !== todoId) return todo;
-
-        const nextStatus = NEXT_TODO_STATUS[todo.status];
-        return {
-          ...todo,
-          status: nextStatus,
-          isDone: nextStatus === 'done',
-        };
-      }),
-    );
+    try {
+      const savedTodo = await window.desktopPet.updateTodo(updatedTodo);
+      setTodos((currentTodos) =>
+        currentTodos.map((todo) =>
+          todo.id === todoId ? savedTodo : todo,
+        ),
+      );
+    } catch (error) {
+      console.error('Todo 진행상태를 저장하지 못했습니다.', error);
+    }
   };
 
-  const cycleTodoPriority = (todoId: string): void => {
+  const cycleTodoPriority = async (todoId: string): Promise<void> => {
+    const currentTodo = todos.find((todo) => todo.id === todoId);
+    if (!currentTodo) return;
+
+    const updatedTodo: Todo = {
+      ...currentTodo,
+      priority: currentTodo.priority === 'high' ? 'low' : 'high',
+    };
+
+    try {
+      await window.desktopPet.updateTodo(updatedTodo);
     // 중요도만 새 값으로 바꾸고 진행상태를 포함한 나머지 값은 유지합니다.
     setTodos((currentTodos) =>
       currentTodos.map((todo) =>
@@ -98,7 +154,10 @@ export function App() {
             }
           : todo,
       ),
-    );
+      );
+    } catch (error) {
+      console.error('Todo 중요도를 저장하지 못했습니다.', error);
+    }
   };
 
   return (

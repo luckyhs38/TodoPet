@@ -1,5 +1,9 @@
 export interface DesktopPetApi {
   setIgnoreMouseEvents(shouldIgnore: boolean): void;
+  getTodos(): Promise<Todo[]>;
+  addTodo(todo: Todo): Promise<Todo>;
+  updateTodo(todo: Todo): Promise<Todo>;
+  deleteTodo(todoId: string): Promise<void>;
 }
 
 export type TodoStatus = 'todo' | 'inProgress' | 'done';
