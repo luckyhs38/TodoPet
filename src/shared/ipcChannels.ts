@@ -4,4 +4,5 @@ export const IPC_CHANNELS = {
   addTodo: 'todo:add',
   updateTodo: 'todo:update',
   deleteTodo: 'todo:delete',
+  todoReminderTriggered: 'todo:reminderTriggered',
 } as const;

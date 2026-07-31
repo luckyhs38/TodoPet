@@ -5,6 +5,7 @@ import type { Todo } from '../shared/types';
 
 interface TodoStoreSchema {
   todos: Todo[];
+  notifiedReminderKeys: string[];
 }
 
 const schema: Schema<TodoStoreSchema> = {
@@ -36,6 +37,13 @@ const schema: Schema<TodoStoreSchema> = {
       },
     },
   },
+  notifiedReminderKeys: {
+    type: 'array',
+    default: [],
+    items: {
+      type: 'string',
+    },
+  },
 };
 
 let todoStore: Store<TodoStoreSchema> | undefined;
@@ -44,7 +52,7 @@ function getStore(): Store<TodoStoreSchema> {
   todoStore ??= new Store<TodoStoreSchema>({
     name: 'todos',
     schema,
-    defaults: { todos: [] },
+    defaults: { todos: [], notifiedReminderKeys: [] },
   });
 
   return todoStore;
@@ -89,4 +97,12 @@ export function deleteTodo(todoId: string): void {
     'todos',
     todos.filter((todo) => todo.id !== todoId),
   );
+}
+
+export function getNotifiedReminderKeys(): string[] {
+  return getStore().get('notifiedReminderKeys');
+}
+
+export function saveNotifiedReminderKeys(keys: string[]): void {
+  getStore().set('notifiedReminderKeys', keys);
 }

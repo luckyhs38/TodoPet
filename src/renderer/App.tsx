@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 
-import type { Todo, TodoPriority, TodoStatus } from '../shared/types';
+import type {
+  Todo,
+  TodoPriority,
+  TodoReminderPayload,
+  TodoStatus,
+} from '../shared/types';
+import { SpeechBubble } from './components/SpeechBubble';
 import { TodoPanel } from './components/TodoPanel';
 import { useClickThrough } from './hooks/useClickThrough';
 import { usePetMovement } from './hooks/usePetMovement';
@@ -10,12 +16,23 @@ const NEXT_TODO_STATUS: Record<TodoStatus, TodoStatus> = {
   inProgress: 'done',
   done: 'todo',
 };
+const SPEECH_BUBBLE_DURATION_MS = 30 * 60 * 1000;
+const SPEECH_BUBBLE_WIDTH = 220;
+
 export function App() {
   useClickThrough();
   const [isTodoPanelOpen, setIsTodoPanelOpen] = useState(false);
   // 목록을 App에 두면 패널을 닫아도 앱 실행 중에는 투두가 유지됩니다.
   const [todos, setTodos] = useState<Todo[]>([]);
+  const [reminderQueue, setReminderQueue] = useState<
+    TodoReminderPayload[]
+  >([]);
   const { position, direction, state } = usePetMovement(isTodoPanelOpen);
+  const currentReminder = reminderQueue[0] ?? null;
+  const speechBubbleLeft = Math.max(
+    8,
+    Math.min(position - 75, window.innerWidth - SPEECH_BUBBLE_WIDTH - 8),
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -35,6 +52,64 @@ export function App() {
       isActive = false;
     };
   }, []);
+
+  useEffect(() => {
+    return window.desktopPet.onTodoReminder((payload) => {
+      setReminderQueue((currentQueue) => {
+        const reminderKey = `${payload.todoId}|${payload.remindDate}|${payload.remindTime}`;
+        const isAlreadyQueued = currentQueue.some(
+          (reminder) =>
+            `${reminder.todoId}|${reminder.remindDate}|${reminder.remindTime}` ===
+            reminderKey,
+        );
+        return isAlreadyQueued ? currentQueue : [...currentQueue, payload];
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!currentReminder) return;
+
+    const timerId = window.setTimeout(() => {
+      setReminderQueue((currentQueue) => currentQueue.slice(1));
+    }, SPEECH_BUBBLE_DURATION_MS);
+
+    return () => window.clearTimeout(timerId);
+  }, [currentReminder]);
+
+  const dismissCurrentReminder = (): void => {
+    setReminderQueue((currentQueue) => currentQueue.slice(1));
+  };
+
+  const completeCurrentReminder = async (): Promise<void> => {
+    if (!currentReminder) return;
+
+    const currentTodo = todos.find(
+      (todo) => todo.id === currentReminder.todoId,
+    );
+    if (!currentTodo) {
+      dismissCurrentReminder();
+      return;
+    }
+
+    const completedTodo: Todo = {
+      ...currentTodo,
+      status: 'done',
+      isDone: true,
+    };
+
+    try {
+      const savedTodo = await window.desktopPet.updateTodo(completedTodo);
+      setTodos((currentTodos) =>
+        currentTodos.map((todo) =>
+          todo.id === savedTodo.id ? savedTodo : todo,
+        ),
+      );
+      dismissCurrentReminder();
+    } catch (error) {
+      console.error('알림 Todo를 완료 처리하지 못했습니다.', error);
+    }
+  };
 
   const addTodo = async (
     content: string,
@@ -176,6 +251,20 @@ export function App() {
       >
         <span className="pet-sprite" role="img" aria-label="캐릭터" />
       </button>
+
+      {currentReminder && (
+        <div
+          className="speech-bubble-position"
+          style={{ left: speechBubbleLeft }}
+        >
+          <SpeechBubble
+            todoContent={currentReminder.content}
+            remindTime={currentReminder.remindTime}
+            onConfirm={() => void completeCurrentReminder()}
+            onClose={dismissCurrentReminder}
+          />
+        </div>
+      )}
 
       {isTodoPanelOpen && (
         <TodoPanel
