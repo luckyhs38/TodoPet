@@ -1,10 +1,15 @@
 import { app } from 'electron';
+import squirrelStartup from 'electron-squirrel-startup';
 
+import { enableAutoLaunch } from './autoLaunch';
 import { createPetWindow } from './windowManager';
 import { startReminderScheduler } from './reminderScheduler';
 import { createTray, destroyTray } from './trayManager';
 
+if (squirrelStartup) app.quit();
+
 app.whenReady().then(() => {
+  enableAutoLaunch();
   const petWindow = createPetWindow();
   createTray(petWindow);
   let stopReminderScheduler: (() => void) | undefined;
