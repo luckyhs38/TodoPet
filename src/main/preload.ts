@@ -25,6 +25,9 @@ const desktopPetApi: DesktopPetApi = Object.freeze({
   setIgnoreMouseEvents: (shouldIgnore: boolean): void => {
     ipcRenderer.send(IPC_CHANNELS.setIgnoreMouseEvents, shouldIgnore);
   },
+  showPetContextMenu: (): void => {
+    ipcRenderer.send(IPC_CHANNELS.showPetContextMenu);
+  },
   getTodos: () => ipcRenderer.invoke(IPC_CHANNELS.getTodos),
   addTodo: (todo: Todo) => ipcRenderer.invoke(IPC_CHANNELS.addTodo, todo),
   updateTodo: (todo: Todo) =>

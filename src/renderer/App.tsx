@@ -189,11 +189,13 @@ export function App() {
     const currentTodo = todos.find((todo) => todo.id === todoId);
     if (!currentTodo) return;
 
+    const nextStatus = NEXT_TODO_STATUS[currentTodo.status];
+
     const updatedTodo: Todo = {
       ...currentTodo,
-      status: NEXT_TODO_STATUS[currentTodo.status],
+      status: nextStatus,
+      isDone: nextStatus === 'done',
     };
-
     // map으로 선택한 일정만 새 객체로 바꿔 기존 배열을 직접 수정하지 않습니다.
     try {
       const savedTodo = await window.desktopPet.updateTodo(updatedTodo);
@@ -248,6 +250,10 @@ export function App() {
         aria-expanded={isTodoPanelOpen}
         aria-controls="todo-panel"
         onClick={() => setIsTodoPanelOpen((isOpen) => !isOpen)}
+        onContextMenu={(event) => {
+          event.preventDefault();
+          window.desktopPet.showPetContextMenu();
+        }}
       >
         <span className="pet-sprite" role="img" aria-label="캐릭터" />
       </button>

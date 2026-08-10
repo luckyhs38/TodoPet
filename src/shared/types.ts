@@ -1,5 +1,6 @@
 export interface DesktopPetApi {
   setIgnoreMouseEvents(shouldIgnore: boolean): void;
+  showPetContextMenu(): void;
   getTodos(): Promise<Todo[]>;
   addTodo(todo: Todo): Promise<Todo>;
   updateTodo(todo: Todo): Promise<Todo>;

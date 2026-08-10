@@ -2,9 +2,11 @@ import { app } from 'electron';
 
 import { createPetWindow } from './windowManager';
 import { startReminderScheduler } from './reminderScheduler';
+import { createTray, destroyTray } from './trayManager';
 
 app.whenReady().then(() => {
   const petWindow = createPetWindow();
+  createTray(petWindow);
   let stopReminderScheduler: (() => void) | undefined;
 
   petWindow.webContents.once('did-finish-load', () => {
@@ -14,6 +16,7 @@ app.whenReady().then(() => {
   app.once('before-quit', () => {
     stopReminderScheduler?.();
     stopReminderScheduler = undefined;
+    destroyTray();
   });
 });
 

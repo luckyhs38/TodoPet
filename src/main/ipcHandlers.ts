@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron';
+import { ipcMain, Menu } from 'electron';
 import type {
   BrowserWindow,
   IpcMainEvent,
@@ -13,6 +13,7 @@ import {
   getTodos,
   updateTodo,
 } from './store';
+import { quitApp } from './trayManager';
 
 function isTodo(value: unknown): value is Todo {
   if (!value || typeof value !== 'object') return false;
@@ -52,9 +53,31 @@ export function registerIpcHandlers(petWindow: BrowserWindow): void {
     petWindow.setIgnoreMouseEvents(false);
   };
 
+  const petContextMenu = Menu.buildFromTemplate([
+    {
+      label: '숨기기',
+      click: () => petWindow.hide(),
+    },
+    {
+      label: '종료',
+      click: quitApp,
+    },
+  ]);
+
+  const handleShowPetContextMenu = (event: IpcMainEvent): void => {
+    if (!isTrustedSender(event)) return;
+    if (petWindow.isDestroyed()) return;
+
+    petContextMenu.popup({ window: petWindow });
+  };
+
   ipcMain.on(
     IPC_CHANNELS.setIgnoreMouseEvents,
     handleSetIgnoreMouseEvents,
+  );
+  ipcMain.on(
+    IPC_CHANNELS.showPetContextMenu,
+    handleShowPetContextMenu,
   );
 
   ipcMain.handle(IPC_CHANNELS.getTodos, (event) => {
@@ -84,6 +107,10 @@ export function registerIpcHandlers(petWindow: BrowserWindow): void {
     ipcMain.removeListener(
       IPC_CHANNELS.setIgnoreMouseEvents,
       handleSetIgnoreMouseEvents,
+    );
+    ipcMain.removeListener(
+      IPC_CHANNELS.showPetContextMenu,
+      handleShowPetContextMenu,
     );
     ipcMain.removeHandler(IPC_CHANNELS.getTodos);
     ipcMain.removeHandler(IPC_CHANNELS.addTodo);
