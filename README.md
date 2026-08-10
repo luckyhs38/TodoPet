@@ -6,7 +6,11 @@ TodoPet은 Windows 작업표시줄 위를 돌아다니는 픽셀 캐릭터와 �
 
 ## Preview
 
-<!-- TodoPet 실행 화면 GIF 또는 Screenshot 추가 예정 -->
+<img width="106" height="111" alt="image" src="https://github.com/user-attachments/assets/cac705e3-7630-4f3e-b57b-1914e6a57d10" />
+
+<img width="257" height="150" alt="image" src="https://github.com/user-attachments/assets/12ca6948-9d9b-44da-a7eb-10fd052ee408" />
+
+<img width="239" height="147" alt="image" src="https://github.com/user-attachments/assets/ebf2b51b-0a74-4487-afdb-1c2baa706953" />
 
 ## 주요 기능
 
