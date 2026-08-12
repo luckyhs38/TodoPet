@@ -6,11 +6,18 @@ import type {
 } from 'electron';
 
 import { IPC_CHANNELS } from '../shared/ipcChannels';
-import type { Todo } from '../shared/types';
+import type { SpeechBubbleDurationMinutes, Todo } from '../shared/types';
+import {
+  getAutoLaunchEnabled,
+  setAutoLaunchEnabled,
+} from './autoLaunch';
 import {
   addTodo,
   deleteTodo,
+  getSpeechBubbleSettings,
   getTodos,
+  setSpeechBubbleDurationMinutes,
+  setSpeechBubbleEnabled,
   updateTodo,
 } from './store';
 import { quitApp } from './trayManager';
@@ -33,10 +40,23 @@ function isTodo(value: unknown): value is Todo {
   );
 }
 
-export function registerIpcHandlers(petWindow: BrowserWindow): void {
+export function registerIpcHandlers(
+  petWindow: BrowserWindow,
+  openSettingsWindow: () => void,
+  getSettingsWindow: () => BrowserWindow | undefined,
+): void {
   const isTrustedSender = (
     event: IpcMainEvent | IpcMainInvokeEvent,
   ): boolean => event.sender === petWindow.webContents;
+
+  const isTrustedSettingsSender = (event: IpcMainInvokeEvent): boolean => {
+    const settingsWindow = getSettingsWindow();
+    return Boolean(
+      settingsWindow &&
+        !settingsWindow.isDestroyed() &&
+        event.sender === settingsWindow.webContents,
+    );
+  };
 
   const handleSetIgnoreMouseEvents = (
     event: IpcMainEvent,
@@ -54,6 +74,11 @@ export function registerIpcHandlers(petWindow: BrowserWindow): void {
   };
 
   const petContextMenu = Menu.buildFromTemplate([
+    {
+      label: '환경설정',
+      click: openSettingsWindow,
+    },
+    { type: 'separator' },
     {
       label: '숨기기',
       click: () => petWindow.hide(),
@@ -103,6 +128,64 @@ export function registerIpcHandlers(petWindow: BrowserWindow): void {
     deleteTodo(todoId);
   });
 
+  ipcMain.handle(IPC_CHANNELS.getAutoLaunchEnabled, (event) => {
+    if (!isTrustedSettingsSender(event)) {
+      throw new Error('Untrusted IPC sender.');
+    }
+
+    return getAutoLaunchEnabled();
+  });
+
+  ipcMain.handle(
+    IPC_CHANNELS.setAutoLaunchEnabled,
+    (event, enabled: unknown) => {
+      if (!isTrustedSettingsSender(event)) {
+        throw new Error('Untrusted IPC sender.');
+      }
+      if (typeof enabled !== 'boolean') {
+        throw new TypeError('Invalid auto-launch setting.');
+      }
+
+      return setAutoLaunchEnabled(enabled);
+    },
+  );
+
+  ipcMain.handle(IPC_CHANNELS.getSpeechBubbleSettings, (event) => {
+    if (!isTrustedSettingsSender(event)) {
+      throw new Error('Untrusted IPC sender.');
+    }
+
+    return getSpeechBubbleSettings();
+  });
+
+  ipcMain.handle(
+    IPC_CHANNELS.setSpeechBubbleEnabled,
+    (event, enabled: unknown) => {
+      if (!isTrustedSettingsSender(event)) {
+        throw new Error('Untrusted IPC sender.');
+      }
+      if (typeof enabled !== 'boolean') {
+        throw new TypeError('Invalid speech-bubble setting.');
+      }
+
+      return setSpeechBubbleEnabled(enabled);
+    },
+  );
+
+  ipcMain.handle(
+    IPC_CHANNELS.setSpeechBubbleDurationMinutes,
+    (event, durationMinutes: unknown) => {
+      if (!isTrustedSettingsSender(event)) {
+        throw new Error('Untrusted IPC sender.');
+      }
+      if (!isSpeechBubbleDurationMinutes(durationMinutes)) {
+        throw new TypeError('Invalid speech-bubble duration.');
+      }
+
+      return setSpeechBubbleDurationMinutes(durationMinutes);
+    },
+  );
+
   petWindow.once('closed', () => {
     ipcMain.removeListener(
       IPC_CHANNELS.setIgnoreMouseEvents,
@@ -116,5 +199,23 @@ export function registerIpcHandlers(petWindow: BrowserWindow): void {
     ipcMain.removeHandler(IPC_CHANNELS.addTodo);
     ipcMain.removeHandler(IPC_CHANNELS.updateTodo);
     ipcMain.removeHandler(IPC_CHANNELS.deleteTodo);
+    ipcMain.removeHandler(IPC_CHANNELS.getAutoLaunchEnabled);
+    ipcMain.removeHandler(IPC_CHANNELS.setAutoLaunchEnabled);
+    ipcMain.removeHandler(IPC_CHANNELS.getSpeechBubbleSettings);
+    ipcMain.removeHandler(IPC_CHANNELS.setSpeechBubbleEnabled);
+    ipcMain.removeHandler(
+      IPC_CHANNELS.setSpeechBubbleDurationMinutes,
+    );
   });
+}
+
+function isSpeechBubbleDurationMinutes(
+  value: unknown,
+): value is SpeechBubbleDurationMinutes {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= 1 &&
+    value <= 120
+  );
 }

@@ -1,10 +1,24 @@
 import { app } from 'electron';
 
+export function isAutoLaunchSupported(): boolean {
+  return process.platform === 'win32' && app.isPackaged;
+}
+
+export function getAutoLaunchEnabled(): boolean {
+  if (!isAutoLaunchSupported()) return false;
+
+  return app.getLoginItemSettings().openAtLogin;
+}
+
+export function setAutoLaunchEnabled(enabled: boolean): boolean {
+  if (!isAutoLaunchSupported()) return false;
+
+  app.setLoginItemSettings({ openAtLogin: enabled });
+  return app.getLoginItemSettings().openAtLogin;
+}
+
 export function enableAutoLaunch(): void {
-  if (process.platform !== 'win32' || !app.isPackaged) return;
+  if (getAutoLaunchEnabled()) return;
 
-  const { openAtLogin } = app.getLoginItemSettings();
-  if (openAtLogin) return;
-
-  app.setLoginItemSettings({ openAtLogin: true });
+  setAutoLaunchEnabled(true);
 }

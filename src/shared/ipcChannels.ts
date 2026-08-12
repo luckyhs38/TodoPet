@@ -6,4 +6,9 @@ export const IPC_CHANNELS = {
   updateTodo: 'todo:update',
   deleteTodo: 'todo:delete',
   todoReminderTriggered: 'todo:reminderTriggered',
+  getAutoLaunchEnabled: 'settings:getAutoLaunchEnabled',
+  setAutoLaunchEnabled: 'settings:setAutoLaunchEnabled',
+  getSpeechBubbleSettings: 'settings:getSpeechBubbleSettings',
+  setSpeechBubbleEnabled: 'settings:setSpeechBubbleEnabled',
+  setSpeechBubbleDurationMinutes: 'settings:setSpeechBubbleDurationMinutes',
 } as const;

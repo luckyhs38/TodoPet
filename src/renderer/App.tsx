@@ -16,7 +16,6 @@ const NEXT_TODO_STATUS: Record<TodoStatus, TodoStatus> = {
   inProgress: 'done',
   done: 'todo',
 };
-const SPEECH_BUBBLE_DURATION_MS = 30 * 60 * 1000;
 const SPEECH_BUBBLE_WIDTH = 220;
 
 export function App() {
@@ -70,9 +69,11 @@ export function App() {
   useEffect(() => {
     if (!currentReminder) return;
 
+    const durationMs =
+      currentReminder.speechBubbleDurationMinutes * 60 * 1000;
     const timerId = window.setTimeout(() => {
       setReminderQueue((currentQueue) => currentQueue.slice(1));
-    }, SPEECH_BUBBLE_DURATION_MS);
+    }, durationMs);
 
     return () => window.clearTimeout(timerId);
   }, [currentReminder]);

@@ -5,6 +5,13 @@ export interface DesktopPetApi {
   addTodo(todo: Todo): Promise<Todo>;
   updateTodo(todo: Todo): Promise<Todo>;
   deleteTodo(todoId: string): Promise<void>;
+  getAutoLaunchEnabled(): Promise<boolean>;
+  setAutoLaunchEnabled(enabled: boolean): Promise<boolean>;
+  getSpeechBubbleSettings(): Promise<SpeechBubbleSettings>;
+  setSpeechBubbleEnabled(enabled: boolean): Promise<SpeechBubbleSettings>;
+  setSpeechBubbleDurationMinutes(
+    durationMinutes: SpeechBubbleDurationMinutes,
+  ): Promise<SpeechBubbleSettings>;
   onTodoReminder(
     callback: (payload: TodoReminderPayload) => void,
   ): () => void;
@@ -30,6 +37,14 @@ export interface TodoReminderPayload {
   content: string;
   remindDate: string;
   remindTime: string;
+  speechBubbleDurationMinutes: SpeechBubbleDurationMinutes;
+}
+
+export type SpeechBubbleDurationMinutes = number;
+
+export interface SpeechBubbleSettings {
+  speechBubbleEnabled: boolean;
+  speechBubbleDurationMinutes: SpeechBubbleDurationMinutes;
 }
 
 export type PetDirection = 'left' | 'right';

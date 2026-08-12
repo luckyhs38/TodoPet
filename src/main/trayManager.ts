@@ -18,7 +18,10 @@ export function quitApp(): void {
   app.quit();
 }
 
-export function createTray(petWindow: BrowserWindow): void {
+export function createTray(
+  petWindow: BrowserWindow,
+  openSettingsWindow: () => void,
+): void {
   if (tray) return;
 
   const trayIconPath = path.join(
@@ -38,6 +41,11 @@ export function createTray(petWindow: BrowserWindow): void {
   tray.setToolTip('Desktop Pet');
   tray.setContextMenu(
     Menu.buildFromTemplate([
+      {
+        label: '환경설정',
+        click: openSettingsWindow,
+      },
+      { type: 'separator' },
       {
         label: '열기',
         click: () => showPetWindow(petWindow),

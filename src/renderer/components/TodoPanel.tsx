@@ -451,10 +451,10 @@ export function TodoPanel({
                     title={`진행상태: ${TODO_STATUS_LABELS[todo.status]}`}
                   >
                     {todo.status === 'todo'
-                      ? '□'
+                      ? ''
                       : todo.status === 'inProgress'
-                        ? '◩'
-                        : '■'}
+                        ? '≫'
+                        : '✓'}
                   </button>
                   <time
                     className="todo-list-time"

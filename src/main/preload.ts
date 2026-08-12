@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from '../shared/ipcChannels';
 import type {
   DesktopPetApi,
+  SpeechBubbleDurationMinutes,
   Todo,
   TodoReminderPayload,
 } from '../shared/types';
@@ -17,7 +18,11 @@ function isTodoReminderPayload(
     typeof payload.todoId === 'string' &&
     typeof payload.content === 'string' &&
     typeof payload.remindDate === 'string' &&
-    typeof payload.remindTime === 'string'
+    typeof payload.remindTime === 'string' &&
+    typeof payload.speechBubbleDurationMinutes === 'number' &&
+    Number.isInteger(payload.speechBubbleDurationMinutes) &&
+    payload.speechBubbleDurationMinutes >= 1 &&
+    payload.speechBubbleDurationMinutes <= 120
   );
 }
 
@@ -34,6 +39,21 @@ const desktopPetApi: DesktopPetApi = Object.freeze({
     ipcRenderer.invoke(IPC_CHANNELS.updateTodo, todo),
   deleteTodo: (todoId: string) =>
     ipcRenderer.invoke(IPC_CHANNELS.deleteTodo, todoId),
+  getAutoLaunchEnabled: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.getAutoLaunchEnabled),
+  setAutoLaunchEnabled: (enabled: boolean) =>
+    ipcRenderer.invoke(IPC_CHANNELS.setAutoLaunchEnabled, enabled),
+  getSpeechBubbleSettings: () =>
+    ipcRenderer.invoke(IPC_CHANNELS.getSpeechBubbleSettings),
+  setSpeechBubbleEnabled: (enabled: boolean) =>
+    ipcRenderer.invoke(IPC_CHANNELS.setSpeechBubbleEnabled, enabled),
+  setSpeechBubbleDurationMinutes: (
+    durationMinutes: SpeechBubbleDurationMinutes,
+  ) =>
+    ipcRenderer.invoke(
+      IPC_CHANNELS.setSpeechBubbleDurationMinutes,
+      durationMinutes,
+    ),
   onTodoReminder: (
     callback: (payload: TodoReminderPayload) => void,
   ): (() => void) => {

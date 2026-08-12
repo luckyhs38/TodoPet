@@ -4,6 +4,7 @@ import { IPC_CHANNELS } from '../shared/ipcChannels';
 import type { Todo, TodoReminderPayload } from '../shared/types';
 import {
   getNotifiedReminderKeys,
+  getSpeechBubbleSettings,
   getTodos,
   saveNotifiedReminderKeys,
 } from './store';
@@ -84,12 +85,20 @@ export function startReminderScheduler(
         ...sessionKeys,
       ]);
       const now = new Date();
+      const speechBubbleSettings = getSpeechBubbleSettings();
 
       for (const todo of todos) {
         if (!isTodoReminderDue(todo, now)) continue;
 
         const reminderKey = createReminderKey(todo);
         if (notifiedKeys.has(reminderKey)) continue;
+
+        if (!speechBubbleSettings.speechBubbleEnabled) {
+          sessionNotifiedKeys.add(reminderKey);
+          notifiedKeys.add(reminderKey);
+          continue;
+        }
+
         if (petWindow.isDestroyed() || petWindow.webContents.isDestroyed()) {
           continue;
         }
@@ -99,6 +108,8 @@ export function startReminderScheduler(
           content: todo.content,
           remindDate: todo.remindDate,
           remindTime: todo.remindTime,
+          speechBubbleDurationMinutes:
+            speechBubbleSettings.speechBubbleDurationMinutes,
         };
 
         try {

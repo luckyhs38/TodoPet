@@ -23,7 +23,7 @@ body {
   --pet-size: 70px;
 
   position: absolute;
-  bottom: 0;
+  bottom: -4px;
   left: 0;
   width: var(--pet-size);
   height: var(--pet-size);
@@ -328,6 +328,8 @@ body {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 5px;
   min-width: 0;
+    padding-inline: 3px;
+  font-size: 11px;
 }
 
 .todo-list {
@@ -390,14 +392,16 @@ body {
   width: 14px;
   height: 14px;
   min-height: 14px;
+  align-self: center;
   padding: 0;
-  border-color: transparent;
+  border: 1px solid currentColor;
   border-radius: 1px;
   background: transparent;
   color: #ffffff;
   display: grid;
   place-items: center;
-  font-size: 12px;
+  font-size: 10px;
+  font-weight: 700;
   line-height: 1;
 }
 
@@ -671,4 +675,130 @@ body {
 .speech-bubble button:focus-visible {
   outline: 1px solid #ffffff;
   outline-offset: 2px;
+}
+
+.settings-stage {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.settings-panel {
+  position: relative;
+  bottom: auto;
+  width: 310px;
+  height: 205px;
+  max-height: none;
+}
+
+.settings-panel::before,
+.settings-panel::after {
+  display: none;
+}
+
+.settings-header {
+  -webkit-app-region: drag;
+}
+
+.settings-header button {
+  -webkit-app-region: no-drag;
+}
+
+.settings-body {
+  gap: 7px;
+}
+
+.settings-section-title {
+  margin: 0;
+  color: #fff3b8;
+  font-size: 11px;
+}
+
+.settings-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 84px;
+  align-items: center;
+  gap: 8px;
+}
+
+.todo-panel .settings-toggle {
+  position: relative;
+  width: 62px;
+  padding: 2px 5px;
+  border-color: #20272d;
+  border-radius: 12px;
+  background: #5f6b73;
+  color: #ffffff;
+  font-size: 9px;
+  text-align: right;
+  justify-self: end;
+}
+
+.todo-panel .settings-toggle[aria-checked='true'] {
+  background: #ffd65a;
+  color: #20272d;
+  text-align: left;
+}
+
+.settings-toggle-label {
+  display: block;
+  padding-inline: 2px;
+}
+
+.settings-toggle-handle {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 15px;
+  height: 15px;
+  border: 1px solid #20272d;
+  border-radius: 50%;
+  box-sizing: border-box;
+  background: #ffffff;
+  transition: transform 120ms ease;
+}
+
+.settings-toggle[aria-checked='true'] .settings-toggle-handle {
+  transform: translateX(39px);
+}
+
+.todo-panel .settings-toggle:focus-visible {
+  outline: 1px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.todo-panel .settings-toggle:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.settings-duration-control {
+  width: 62px;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  justify-self: end;
+  gap: 3px;
+}
+
+.settings-duration-control input {
+  width: 100%;
+  min-width: 0;
+}
+
+.settings-duration-control > span {
+  white-space: nowrap;
+}
+
+.settings-duration-control input:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.settings-message {
+  margin: 0;
+  color: #fff3b8;
+  font-size: 9px;
 }

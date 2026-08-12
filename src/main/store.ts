@@ -1,11 +1,18 @@
 import Store from 'electron-store';
 import type { Schema } from 'electron-store';
 
-import type { Todo } from '../shared/types';
+import type {
+  SpeechBubbleDurationMinutes,
+  SpeechBubbleSettings,
+  Todo,
+} from '../shared/types';
 
 interface TodoStoreSchema {
   todos: Todo[];
   notifiedReminderKeys: string[];
+  autoLaunchInitialized: boolean;
+  speechBubbleEnabled: boolean;
+  speechBubbleDurationMinutes: SpeechBubbleDurationMinutes;
 }
 
 const schema: Schema<TodoStoreSchema> = {
@@ -44,6 +51,20 @@ const schema: Schema<TodoStoreSchema> = {
       type: 'string',
     },
   },
+  autoLaunchInitialized: {
+    type: 'boolean',
+    default: false,
+  },
+  speechBubbleEnabled: {
+    type: 'boolean',
+    default: true,
+  },
+  speechBubbleDurationMinutes: {
+    type: 'number',
+    minimum: 1,
+    maximum: 120,
+    default: 1,
+  },
 };
 
 let todoStore: Store<TodoStoreSchema> | undefined;
@@ -52,7 +73,13 @@ function getStore(): Store<TodoStoreSchema> {
   todoStore ??= new Store<TodoStoreSchema>({
     name: 'todos',
     schema,
-    defaults: { todos: [], notifiedReminderKeys: [] },
+    defaults: {
+      todos: [],
+      notifiedReminderKeys: [],
+      autoLaunchInitialized: false,
+      speechBubbleEnabled: true,
+      speechBubbleDurationMinutes: 1,
+    },
   });
 
   return todoStore;
@@ -105,4 +132,36 @@ export function getNotifiedReminderKeys(): string[] {
 
 export function saveNotifiedReminderKeys(keys: string[]): void {
   getStore().set('notifiedReminderKeys', keys);
+}
+
+export function getAutoLaunchInitialized(): boolean {
+  return getStore().get('autoLaunchInitialized');
+}
+
+export function setAutoLaunchInitialized(initialized: boolean): void {
+  getStore().set('autoLaunchInitialized', initialized);
+}
+
+export function getSpeechBubbleSettings(): SpeechBubbleSettings {
+  const store = getStore();
+  return {
+    speechBubbleEnabled: store.get('speechBubbleEnabled'),
+    speechBubbleDurationMinutes: store.get(
+      'speechBubbleDurationMinutes',
+    ),
+  };
+}
+
+export function setSpeechBubbleEnabled(
+  enabled: boolean,
+): SpeechBubbleSettings {
+  getStore().set('speechBubbleEnabled', enabled);
+  return getSpeechBubbleSettings();
+}
+
+export function setSpeechBubbleDurationMinutes(
+  durationMinutes: SpeechBubbleDurationMinutes,
+): SpeechBubbleSettings {
+  getStore().set('speechBubbleDurationMinutes', durationMinutes);
+  return getSpeechBubbleSettings();
 }
