@@ -2,7 +2,14 @@ import { app, Menu, nativeImage, Tray } from 'electron';
 import type { BrowserWindow } from 'electron';
 import path from 'node:path';
 
+import {
+  getPositionLocked,
+  setPositionLocked,
+  subscribeToPositionLock,
+} from './positionLock';
+
 let tray: Tray | undefined;
+let unsubscribeFromPositionLock: (() => void) | undefined;
 
 function showPetWindow(petWindow: BrowserWindow): void {
   if (petWindow.isDestroyed()) return;
@@ -39,27 +46,40 @@ export function createTray(
 
   tray = new Tray(trayIcon);
   tray.setToolTip('Desktop Pet');
-  tray.setContextMenu(
-    Menu.buildFromTemplate([
-      {
-        label: '환경설정',
-        click: openSettingsWindow,
-      },
-      { type: 'separator' },
-      {
-        label: '열기',
-        click: () => showPetWindow(petWindow),
-      },
-      {
-        label: '종료',
-        click: quitApp,
-      },
-    ]),
-  );
+  const trayMenu = Menu.buildFromTemplate([
+    {
+      label: '환경설정',
+      click: openSettingsWindow,
+    },
+    { type: 'separator' },
+    {
+      label: '위치 고정',
+      id: 'position-lock',
+      type: 'checkbox',
+      checked: getPositionLocked(),
+      click: (menuItem) => setPositionLocked(menuItem.checked),
+    },
+    { type: 'separator' },
+    {
+      label: '열기',
+      click: () => showPetWindow(petWindow),
+    },
+    {
+      label: '종료',
+      click: quitApp,
+    },
+  ]);
+  const positionLockMenuItem = trayMenu.getMenuItemById('position-lock');
+  unsubscribeFromPositionLock = subscribeToPositionLock((isLocked) => {
+    if (positionLockMenuItem) positionLockMenuItem.checked = isLocked;
+  });
+  tray.setContextMenu(trayMenu);
   tray.on('double-click', () => showPetWindow(petWindow));
 }
 
 export function destroyTray(): void {
+  unsubscribeFromPositionLock?.();
+  unsubscribeFromPositionLock = undefined;
   tray?.destroy();
   tray = undefined;
 }

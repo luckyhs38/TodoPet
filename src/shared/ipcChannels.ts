@@ -1,6 +1,7 @@
 export const IPC_CHANNELS = {
   setIgnoreMouseEvents: 'window:setIgnoreMouseEvents',
   showPetContextMenu: 'pet:showContextMenu',
+  positionLockChanged: 'pet:positionLockChanged',
   getTodos: 'todo:getAll',
   addTodo: 'todo:add',
   updateTodo: 'todo:update',

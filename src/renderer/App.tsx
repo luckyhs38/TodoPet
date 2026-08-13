@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { PointerEvent as ReactPointerEvent } from 'react';
 
 import type {
   Todo,
@@ -17,21 +18,104 @@ const NEXT_TODO_STATUS: Record<TodoStatus, TodoStatus> = {
   done: 'todo',
 };
 const SPEECH_BUBBLE_WIDTH = 220;
+const PET_DRAG_THRESHOLD = 3;
+
+interface PetDragState {
+  pointerId: number;
+  startClientX: number;
+  startPosition: number;
+  hasMoved: boolean;
+}
 
 export function App() {
-  useClickThrough();
   const [isTodoPanelOpen, setIsTodoPanelOpen] = useState(false);
+  const [isPositionLocked, setIsPositionLocked] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  useClickThrough(isDragging);
+  const dragStateRef = useRef<PetDragState | null>(null);
+  const suppressClickRef = useRef(false);
   // 목록을 App에 두면 패널을 닫아도 앱 실행 중에는 투두가 유지됩니다.
   const [todos, setTodos] = useState<Todo[]>([]);
   const [reminderQueue, setReminderQueue] = useState<
     TodoReminderPayload[]
   >([]);
-  const { position, direction, state } = usePetMovement(isTodoPanelOpen);
+  const shouldPauseMovement =
+    isTodoPanelOpen || isPositionLocked || isDragging;
+  const { position, direction, state, movePetTo } = usePetMovement(
+    shouldPauseMovement,
+  );
   const currentReminder = reminderQueue[0] ?? null;
   const speechBubbleLeft = Math.max(
     8,
     Math.min(position - 75, window.innerWidth - SPEECH_BUBBLE_WIDTH - 8),
   );
+
+  const startPetDrag = (event: ReactPointerEvent<HTMLButtonElement>): void => {
+    if (event.button !== 0) return;
+
+    suppressClickRef.current = false;
+    dragStateRef.current = {
+      pointerId: event.pointerId,
+      startClientX: event.clientX,
+      startPosition: position,
+      hasMoved: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setIsDragging(true);
+  };
+
+  const movePetByDrag = (
+    event: ReactPointerEvent<HTMLButtonElement>,
+  ): void => {
+    const dragState = dragStateRef.current;
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+
+    const distance = event.clientX - dragState.startClientX;
+    if (!dragState.hasMoved && Math.abs(distance) < PET_DRAG_THRESHOLD) return;
+
+    dragState.hasMoved = true;
+    movePetTo(dragState.startPosition + distance);
+  };
+
+  const finishPetDrag = (
+    event: ReactPointerEvent<HTMLButtonElement>,
+  ): void => {
+    const dragState = dragStateRef.current;
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+
+    suppressClickRef.current = dragState.hasMoved;
+    dragStateRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    setIsDragging(false);
+  };
+
+  const cancelPetDrag = (
+    event: ReactPointerEvent<HTMLButtonElement>,
+  ): void => {
+    const dragState = dragStateRef.current;
+    if (!dragState || dragState.pointerId !== event.pointerId) return;
+
+    suppressClickRef.current = false;
+    dragStateRef.current = null;
+    setIsDragging(false);
+  };
+
+  const handlePetClick = (): void => {
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
+
+    setIsTodoPanelOpen((isOpen) => !isOpen);
+  };
+
+  useEffect(() => {
+    return window.desktopPet.onPositionLockChanged((isLocked) => {
+      setIsPositionLocked(isLocked);
+    });
+  }, []);
 
   useEffect(() => {
     let isActive = true;
@@ -246,11 +330,16 @@ export function App() {
         style={{ transform: `translateX(${position}px)` }}
         data-direction={direction}
         data-movement-state={state}
+        data-dragging={isDragging ? 'true' : undefined}
         data-pet-interactive="true"
         aria-label="투두 패널 열기 또는 닫기"
         aria-expanded={isTodoPanelOpen}
         aria-controls="todo-panel"
-        onClick={() => setIsTodoPanelOpen((isOpen) => !isOpen)}
+        onPointerDown={startPetDrag}
+        onPointerMove={movePetByDrag}
+        onPointerUp={finishPetDrag}
+        onPointerCancel={cancelPetDrag}
+        onClick={handlePetClick}
         onContextMenu={(event) => {
           event.preventDefault();
           window.desktopPet.showPetContextMenu();

@@ -67,9 +67,34 @@ const desktopPetApi: DesktopPetApi = Object.freeze({
     };
 
     ipcRenderer.on(IPC_CHANNELS.todoReminderTriggered, listener);
+
     return () => {
       ipcRenderer.removeListener(
         IPC_CHANNELS.todoReminderTriggered,
+        listener,
+      );
+    };
+  },
+  onPositionLockChanged: (
+    callback: (isLocked: boolean) => void,
+  ): (() => void) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      isLocked: unknown,
+    ): void => {
+      if (typeof isLocked !== 'boolean') {
+        console.error('잘못된 위치 고정 상태를 받았습니다.');
+        return;
+      }
+
+      callback(isLocked);
+    };
+
+    ipcRenderer.on(IPC_CHANNELS.positionLockChanged, listener);
+
+    return () => {
+      ipcRenderer.removeListener(
+        IPC_CHANNELS.positionLockChanged,
         listener,
       );
     };

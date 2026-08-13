@@ -8,6 +8,7 @@ interface PetMovement {
   position: number;
   direction: PetDirection;
   state: PetMovementState;
+  movePetTo(nextPosition: number): void;
 }
 
 const PET_WIDTH = 96;
@@ -25,12 +26,23 @@ function getRandomDirection(): PetDirection {
 
 export function usePetMovement(isPaused = false): PetMovement {
   const isPausedRef = useRef(isPaused);
+  const requestedPositionRef = useRef<number | null>(null);
   const [position, setPosition] = useState(() =>
     Math.max(0, window.innerWidth - PET_WIDTH),
   );
   const [direction, setDirection] = useState<PetDirection>('left');
   const [state, setState] = useState<PetMovementState>('idle');
   isPausedRef.current = isPaused;
+  const movePetTo = (nextPosition: number): void => {
+    const maximumX = Math.max(0, window.innerWidth - PET_WIDTH);
+    const clampedPosition = Math.max(
+      0,
+      Math.min(nextPosition, maximumX),
+    );
+
+    requestedPositionRef.current = clampedPosition;
+    setPosition(clampedPosition);
+  };
 
   useEffect(() => {
     let animationFrameId = 0;
@@ -72,6 +84,12 @@ export function usePetMovement(isPaused = false): PetMovement {
 
     const movePet = (currentTime: number): void => {
       const maximumX = Math.max(0, window.innerWidth - PET_WIDTH);
+
+      if (requestedPositionRef.current !== null) {
+        currentPosition = requestedPositionRef.current;
+        requestedPositionRef.current = null;
+      }
+
       currentPosition = Math.min(currentPosition, maximumX);
 
       if (isPausedRef.current) {
@@ -127,5 +145,5 @@ export function usePetMovement(isPaused = false): PetMovement {
     return () => cancelAnimationFrame(animationFrameId);
   }, []);
 
-  return { position, direction, state };
+  return { position, direction, state, movePetTo };
 }

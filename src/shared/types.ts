@@ -15,6 +15,9 @@ export interface DesktopPetApi {
   onTodoReminder(
     callback: (payload: TodoReminderPayload) => void,
   ): () => void;
+  onPositionLockChanged(
+    callback: (isLocked: boolean) => void,
+  ): () => void;
 }
 
 export type TodoStatus = 'todo' | 'inProgress' | 'done';

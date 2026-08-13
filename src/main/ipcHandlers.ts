@@ -20,6 +20,11 @@ import {
   setSpeechBubbleEnabled,
   updateTodo,
 } from './store';
+import {
+  getPositionLocked,
+  setPositionLocked,
+  subscribeToPositionLock,
+} from './positionLock';
 import { quitApp } from './trayManager';
 
 function isTodo(value: unknown): value is Todo {
@@ -80,6 +85,16 @@ export function registerIpcHandlers(
     },
     { type: 'separator' },
     {
+      label: '위치 고정',
+      id: 'position-lock',
+      type: 'checkbox',
+      checked: getPositionLocked(),
+      click: (menuItem) => {
+        setPositionLocked(menuItem.checked);
+      },
+    },
+    { type: 'separator' },
+    {
       label: '숨기기',
       click: () => petWindow.hide(),
     },
@@ -89,9 +104,24 @@ export function registerIpcHandlers(
     },
   ]);
 
+  const positionLockMenuItem = petContextMenu.getMenuItemById('position-lock');
+  const unsubscribeFromPositionLock = subscribeToPositionLock((isLocked) => {
+    if (positionLockMenuItem) positionLockMenuItem.checked = isLocked;
+    if (petWindow.isDestroyed() || petWindow.webContents.isDestroyed()) return;
+
+    petWindow.webContents.send(
+      IPC_CHANNELS.positionLockChanged,
+      isLocked,
+    );
+  });
+
   const handleShowPetContextMenu = (event: IpcMainEvent): void => {
     if (!isTrustedSender(event)) return;
     if (petWindow.isDestroyed()) return;
+
+    if (positionLockMenuItem) {
+      positionLockMenuItem.checked = getPositionLocked();
+    }
 
     petContextMenu.popup({ window: petWindow });
   };
@@ -187,6 +217,7 @@ export function registerIpcHandlers(
   );
 
   petWindow.once('closed', () => {
+    unsubscribeFromPositionLock();
     ipcMain.removeListener(
       IPC_CHANNELS.setIgnoreMouseEvents,
       handleSetIgnoreMouseEvents,

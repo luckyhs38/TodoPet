@@ -30,8 +30,13 @@ body {
   padding: 0;
   border: 0;
   background: transparent;
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
   will-change: transform;
+}
+
+.pet-placeholder[data-dragging='true'] {
+  cursor: grabbing;
 }
 
 .pet-sprite {
@@ -55,6 +60,13 @@ body {
 .pet-placeholder[data-movement-state='walk'] .pet-sprite {
   background-image: url('../../assets/sprites/idle/walk.png');
   /* Source sheet: 2508x627px, four 627px-wide frames. */
+  background-size: 400% 100%;
+  background-position: 0 0;
+  animation: pet-walk 600ms steps(4) infinite;
+}
+
+.pet-placeholder[data-dragging='true'] .pet-sprite {
+  background-image: url('../../assets/sprites/idle/grab.png');
   background-size: 400% 100%;
   background-position: 0 0;
   animation: pet-walk 600ms steps(4) infinite;
