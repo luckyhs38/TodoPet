@@ -11,7 +11,7 @@ import {
 let tray: Tray | undefined;
 let unsubscribeFromPositionLock: (() => void) | undefined;
 
-function showPetWindow(petWindow: BrowserWindow): void {
+export function showPetWindow(petWindow: BrowserWindow): void {
   if (petWindow.isDestroyed()) return;
 
   if (petWindow.isMinimized()) {
